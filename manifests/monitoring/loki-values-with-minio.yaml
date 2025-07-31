@@ -1,0 +1,30 @@
+loki:
+  auth_enabled: false
+  singleBinary:
+    replicas: 1
+    persistence:
+      enabled: true
+      size: 10Gi
+      storageClass: local-path
+      accessMode: ReadWriteOnce
+  storage:
+    type: s3
+    s3:
+      endpoint: minio.monitoring.svc.cluster.local:9000
+      region: us-east-1
+      bucketnames:
+        chunks: loki-chunks
+        ruler: loki-ruler
+      access_key_id: minioadmin
+      secret_access_key: minioadmin123
+      s3forcepathstyle: true
+      insecure: true
+
+service:
+  type: LoadBalancer
+
+ingress:
+  enabled: true
+  hosts:
+    - loki.local
+  ingressClassName: nginx 

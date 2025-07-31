@@ -1,0 +1,50 @@
+tempo:
+  auth_enabled: false
+  
+  storage:
+    trace:
+      backend: local
+      local:
+        path: /var/tempo/traces
+      wal:
+        path: /var/tempo/wal
+
+  retention: 24h
+
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+  persistence:
+    enabled: true
+    size: 5Gi
+    storageClassName: local-path
+
+service:
+  type: ClusterIP
+
+ingress:
+  enabled: true
+  hosts:
+    - host: tempo.local
+      paths:
+        - path: /
+          pathType: Prefix
+  ingressClassName: nginx
+
+# Disable other components
+gateway:
+  enabled: false
+
+grafana-agent-operator:
+  enabled: false
+
+memcached:
+  enabled: false
+
+memcachedExporter:
+  enabled: false 

@@ -1,0 +1,182 @@
+apiVersion: monitoring.coreos.com/v1alpha1
+kind: PrometheusRule
+metadata:
+  name: kubernetes-alerts
+  namespace: monitoring
+  labels:
+    prometheus: kube-prometheus
+    role: alert-rules
+spec:
+  groups:
+  - name: kubernetes.rules
+    rules:
+    # Node Alerts
+    - alert: NodeDown
+      expr: up == 0
+      for: 1m
+      labels:
+        severity: critical
+        category: node
+      annotations:
+        summary: "Node {{ $labels.instance }} is down"
+        description: "Node {{ $labels.instance }} has been down for more than 1 minute"
+        grafana_url: "http://grafana.local/d/node-overview/node-overview?orgId=1&var-instance={{ $labels.instance }}"
+    
+    - alert: HighCPUUsage
+      expr: 100 - (avg by(instance) (irate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 80
+      for: 5m
+      labels:
+        severity: warning
+        category: node
+      annotations:
+        summary: "High CPU usage on {{ $labels.instance }}"
+        description: "CPU usage is above 80% for 5 minutes on {{ $labels.instance }}"
+    
+    - alert: HighMemoryUsage
+      expr: (node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) / node_memory_MemTotal_bytes * 100 > 85
+      for: 5m
+      labels:
+        severity: warning
+        category: node
+      annotations:
+        summary: "High memory usage on {{ $labels.instance }}"
+        description: "Memory usage is above 85% for 5 minutes on {{ $labels.instance }}"
+    
+    - alert: HighDiskUsage
+      expr: (node_filesystem_size_bytes - node_filesystem_free_bytes) / node_filesystem_size_bytes * 100 > 85
+      for: 5m
+      labels:
+        severity: warning
+        category: node
+      annotations:
+        summary: "High disk usage on {{ $labels.instance }}"
+        description: "Disk usage is above 85% for 5 minutes on {{ $labels.instance }}"
+    
+    # Pod Alerts
+    - alert: PodCrashLooping
+      expr: rate(kube_pod_container_status_restarts_total[15m]) * 60 > 0
+      for: 5m
+      labels:
+        severity: critical
+        category: pod
+      annotations:
+        summary: "Pod {{ $labels.pod }} is crash looping"
+        description: "Pod {{ $labels.pod }} is restarting {{ printf \"%.2f\" $value }} times / 5 minutes"
+    
+    - alert: PodNotReady
+      expr: kube_pod_status_phase{phase!="Running",phase!="Succeeded"} > 0
+      for: 5m
+      labels:
+        severity: warning
+        category: pod
+      annotations:
+        summary: "Pod {{ $labels.pod }} is not ready"
+        description: "Pod {{ $labels.pod }} is in {{ $labels.phase }} state"
+    
+    - alert: PodHighCPUUsage
+      expr: sum by(pod) (rate(container_cpu_usage_seconds_total{container!=""}[5m])) * 100 > 80
+      for: 5m
+      labels:
+        severity: warning
+        category: pod
+      annotations:
+        summary: "High CPU usage in pod {{ $labels.pod }}"
+        description: "Pod {{ $labels.pod }} is using more than 80% CPU"
+    
+    - alert: PodHighMemoryUsage
+      expr: sum by(pod) (container_memory_usage_bytes{container!=""}) / sum by(pod) (container_spec_memory_limit_bytes{container!=""}) * 100 > 85
+      for: 5m
+      labels:
+        severity: warning
+        category: pod
+      annotations:
+        summary: "High memory usage in pod {{ $labels.pod }}"
+        description: "Pod {{ $labels.pod }} is using more than 85% of memory limit"
+    
+    # Service Alerts
+    - alert: ServiceDown
+      expr: up{job="kubernetes-service-endpoints"} == 0
+      for: 1m
+      labels:
+        severity: critical
+        category: service
+      annotations:
+        summary: "Service {{ $labels.service }} is down"
+        description: "Service {{ $labels.service }} has no endpoints available"
+    
+    # Deployment Alerts
+    - alert: DeploymentNotAvailable
+      expr: kube_deployment_status_replicas_available / kube_deployment_spec_replicas < 0.8
+      for: 5m
+      labels:
+        severity: warning
+        category: deployment
+      annotations:
+        summary: "Deployment {{ $labels.deployment }} is not fully available"
+        description: "Deployment {{ $labels.deployment }} has less than 80% replicas available"
+    
+    # PersistentVolume Alerts
+    - alert: PersistentVolumeFillingUp
+      expr: (kubelet_volume_stats_used_bytes / kubelet_volume_stats_capacity_bytes) * 100 > 85
+      for: 5m
+      labels:
+        severity: warning
+        category: storage
+      annotations:
+        summary: "PersistentVolume {{ $labels.persistentvolumeclaim }} is filling up"
+        description: "PersistentVolume {{ $labels.persistentvolumeclaim }} is more than 85% full"
+    
+    # Network Alerts
+    - alert: HighNetworkErrors
+      expr: rate(node_network_receive_errs_total[5m]) + rate(node_network_transmit_errs_total[5m]) > 10
+      for: 5m
+      labels:
+        severity: warning
+        category: network
+      annotations:
+        summary: "High network errors on {{ $labels.instance }}"
+        description: "Network error rate is high on {{ $labels.instance }}"
+    
+    # Kubernetes API Alerts
+    - alert: KubernetesAPIDown
+      expr: up{job="apiserver"} == 0
+      for: 1m
+      labels:
+        severity: critical
+        category: api
+      annotations:
+        summary: "Kubernetes API server is down"
+        description: "Kubernetes API server is not responding"
+    
+    # Etcd Alerts
+    - alert: EtcdDown
+      expr: up{job="etcd"} == 0
+      for: 1m
+      labels:
+        severity: critical
+        category: etcd
+      annotations:
+        summary: "Etcd is down"
+        description: "Etcd cluster is not responding"
+    
+    # Scheduler Alerts
+    - alert: SchedulerDown
+      expr: up{job="kube-scheduler"} == 0
+      for: 1m
+      labels:
+        severity: critical
+        category: scheduler
+      annotations:
+        summary: "Kubernetes scheduler is down"
+        description: "Kubernetes scheduler is not responding"
+    
+    # Controller Manager Alerts
+    - alert: ControllerManagerDown
+      expr: up{job="kube-controller-manager"} == 0
+      for: 1m
+      labels:
+        severity: critical
+        category: controller
+      annotations:
+        summary: "Kubernetes controller manager is down"
+        description: "Kubernetes controller manager is not responding" 

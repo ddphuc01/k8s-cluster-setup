@@ -1,0 +1,23 @@
+loki:
+  auth_enabled: false
+  singleBinary:
+    replicas: 1
+    persistence:
+      enabled: true
+      size: 10Gi
+      storageClass: local-path
+      accessMode: ReadWriteOnce
+  storage:
+    type: filesystem
+    filesystem:
+      chunks_directory: /var/loki/chunks
+      rules_directory: /var/loki/rules
+
+service:
+  type: LoadBalancer
+
+ingress:
+  enabled: true
+  hosts:
+    - loki.local
+  ingressClassName: nginx 

@@ -1,0 +1,42 @@
+loki:
+  auth_enabled: false
+  singleBinary:
+    replicas: 1
+    persistence:
+      enabled: true
+      size: 10Gi
+      storageClass: local-path
+      accessMode: ReadWriteOnce
+
+# Disable distributed mode components
+read:
+  enabled: false
+write:
+  enabled: false
+backend:
+  enabled: false
+
+# Disable other components
+gateway:
+  enabled: false
+
+grafana-agent-operator:
+  enabled: false
+
+canary:
+  enabled: false
+
+logs:
+  enabled: false
+
+service:
+  type: ClusterIP
+
+ingress:
+  enabled: true
+  hosts:
+    - host: loki.local
+      paths:
+        - path: /
+          pathType: Prefix
+  ingressClassName: nginx 

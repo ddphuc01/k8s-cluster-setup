@@ -1,0 +1,89 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: alertmanager-config
+  namespace: monitoring
+type: Opaque
+stringData:
+  alertmanager.yaml: |
+    global:
+      resolve_timeout: 5m
+      slack_api_url: 'https://hooks.slack.com/services/YOUR_SLACK_WEBHOOK'
+      smtp_smarthost: 'smtp.gmail.com:587'
+      smtp_from: 'alertmanager@yourdomain.com'
+      smtp_auth_username: 'your-email@gmail.com'
+      smtp_auth_password: 'your-app-password'
+    
+    templates:
+      - '/etc/alertmanager/template/*.tmpl'
+    
+    route:
+      group_by: ['alertname', 'cluster', 'service']
+      group_wait: 10s
+      group_interval: 10s
+      repeat_interval: 1h
+      receiver: 'slack-notifications'
+      routes:
+        - match:
+            severity: critical
+          receiver: 'pager-duty-critical'
+          continue: true
+        - match:
+            severity: warning
+          receiver: 'slack-notifications'
+    
+    receivers:
+      - name: 'slack-notifications'
+        slack_configs:
+          - channel: '#alerts'
+            title: '{{ template "slack.title" . }}'
+            text: '{{ template "slack.text" . }}'
+            send_resolved: true
+            actions:
+              - type: button
+                text: 'View in Grafana'
+                url: '{{ template "slack.grafanaURL" . }}'
+      
+      - name: 'pager-duty-critical'
+        pagerduty_configs:
+          - routing_key: 'YOUR_PAGERDUTY_KEY'
+            description: '{{ template "pagerduty.description" . }}'
+            severity: '{{ if eq .CommonLabels.severity "critical" }}critical{{ else }}warning{{ end }}'
+            client: 'AlertManager'
+            client_url: '{{ template "pagerduty.clientURL" . }}'
+      
+      - name: 'email-notifications'
+        email_configs:
+          - to: 'admin@yourdomain.com'
+            send_resolved: true
+            headers:
+              subject: '{{ template "email.subject" . }}'
+            html: '{{ template "email.html" . }}'
+      
+      - name: 'webhook-notifications'
+        webhook_configs:
+          - url: 'http://your-webhook-server:8080/alerts'
+            send_resolved: true
+            http_config:
+              basic_auth:
+                username: 'webhook-user'
+                password: 'webhook-password'
+    
+    inhibit_rules:
+      - source_match:
+          severity: 'critical'
+        target_match:
+          severity: 'warning'
+        equal: ['alertname', 'cluster', 'service']
+      
+      - source_match:
+          alertname: 'NodeDown'
+        target_match:
+          alertname: 'HighCPUUsage'
+        equal: ['instance']
+      
+      - source_match:
+          alertname: 'NodeDown'
+        target_match:
+          alertname: 'HighMemoryUsage'
+        equal: ['instance'] 

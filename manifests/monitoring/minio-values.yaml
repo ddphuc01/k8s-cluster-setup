@@ -1,0 +1,34 @@
+auth:
+  rootUser: minioadmin
+  rootPassword: minioadmin123
+
+replicas: 1
+
+persistence:
+  enabled: true
+  size: 5Gi
+  storageClass: local-path
+  accessMode: ReadWriteOnce
+
+resources:
+  requests:
+    memory: 512Mi
+    cpu: 250m
+  limits:
+    memory: 1Gi
+    cpu: 500m
+
+service:
+  type: LoadBalancer
+
+ingress:
+  enabled: true
+  hosts:
+    - minio.local
+  ingressClassName: nginx
+
+consoleIngress:
+  enabled: true
+  hosts:
+    - minio-console.local
+  ingressClassName: nginx 
