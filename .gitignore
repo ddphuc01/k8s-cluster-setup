@@ -1,0 +1,108 @@
+# Kubernetes
+*.kubeconfig
+~/.kube/
+kubeconfig
+admin.conf
+
+# Ansible
+*.retry
+*.log
+ansible.log
+.ansible/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+kubespray-venv/
+/opt/kubespray-venv/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+*.tmp
+*.temp
+temp/
+tmp/
+
+# Backup files
+*.backup
+*.bak
+*.old
+
+# SSH keys (không commit private keys)
+*.pem
+*.key
+id_rsa
+!id_rsa.pub
+
+# Sensitive data
+secrets/
+.env
+*.secret
+
+# Kubespray artifacts
+kubespray/inventory/mycluster/
+kubespray/artifacts/
+
+# Terraform (nếu có)
+*.tfstate
+*.tfstate.*
+.terraform/
+.terraform.lock.hcl
+
+# Helm
+charts/
+*.tgz
+
+# Docker
+.dockerignore
+
+# Local configuration
+local-config/
+config.local.* 
