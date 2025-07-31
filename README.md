@@ -70,4 +70,4 @@ kubectl get pods -A
 ```
 
 ## Liên hệ
-DevOps Engineer - Kubernetes Cluster Setup 
+DevOps Engineer - Kubernetes Cluster Setup # k8s-cluster-setup
