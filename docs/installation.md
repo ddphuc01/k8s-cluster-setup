@@ -516,7 +516,7 @@ kubectl logs -f <pod-name> -n <namespace>
 Nếu gặp vấn đề trong quá trình cài đặt:
 
 1. Kiểm tra [troubleshooting guide](troubleshooting.md)
-2. Xem [GitHub Issues](https://github.com/your-username/k8s-cluster-setup/issues)
+2. Xem [GitHub Issues](https://github.com/ddphuc01/k8s-cluster-setup/issues)
 3. Tạo issue mới với đầy đủ thông tin:
    - OS version
    - Hardware specs

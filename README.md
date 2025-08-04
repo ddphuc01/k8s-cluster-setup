@@ -63,7 +63,7 @@ Dự án này cung cấp giải pháp hoàn chỉnh để triển khai Kubernete
 
 ```bash
 # Clone repository
-git clone https://github.com/your-username/k8s-cluster-setup.git
+git clone https://github.com/ddphuc01/k8s-cluster-setup.git
 cd k8s-cluster-setup
 
 # Cấp quyền thực thi
@@ -151,6 +151,35 @@ kubectl get ingress -n monitoring alertmanager-ingress
 
 - **URL**: `https://alertmanager.your-domain.com`
 
+## 🎛️ Truy cập Rancher Management Platform
+
+### Thông tin truy cập
+```bash
+# Kiểm tra trạng thái Rancher
+./scripts/rancher-status.sh
+
+# Lấy Bootstrap Password
+kubectl get secret --namespace cattle-system bootstrap-secret -o go-template='{{.data.bootstrapPassword|base64decode}}'
+```
+
+- **URL**: `https://rancher.local`
+- **External IP**: `192.168.56.102`
+- **Username**: `admin`
+- **Password**: Bootstrap password từ lệnh trên
+
+### Cấu hình DNS local
+```bash
+# Thêm vào /etc/hosts
+echo "192.168.56.102 rancher.local" | sudo tee -a /etc/hosts
+```
+
+### Tính năng Rancher
+- **Multi-cluster Management**: Quản lý nhiều K8s clusters
+- **Application Catalog**: Deploy apps qua Helm charts
+- **User Management**: RBAC và authentication
+- **Monitoring Integration**: Tích hợp với Prometheus/Grafana
+- **Security Policies**: Network policies, RBAC
+
 ## 🔧 Cấu hình nâng cao
 
 ### Tùy chỉnh Monitoring
@@ -205,11 +234,13 @@ kubectl apply -f manifests/cert-manager/
 ./scripts/install-monitoring-stack.sh # Cài monitoring stack
 ```
 
-## 📚 Tài liệu chi tiết
+## 📋 Tài liệu chi tiết
 
 - [Hướng dẫn cài đặt chi tiết](docs/installation.md)
 - [Cấu hình hệ thống](docs/configuration.md)
 - [Troubleshooting](docs/troubleshooting.md)
+- [Cài đặt Rancher](docs/rancher-installation.md)
+- [Hướng dẫn sử dụng Rancher](docs/rancher-access-guide.md)
 - [Grafana Dashboards](GRAFANA_DASHBOARDS_GUIDE.md)
 - [Loki Deployment](LOKI_DEPLOYMENT_SUMMARY.md)
 
@@ -270,9 +301,9 @@ Dự án này được phân phối dưới MIT License. Xem `LICENSE` để bi�
 
 ## 🆘 Hỗ trợ
 
-- **Issues**: [GitHub Issues](https://github.com/your-username/k8s-cluster-setup/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/your-username/k8s-cluster-setup/discussions)
-- **Email**: your-email@domain.com
+- **Issues**: [GitHub Issues](https://github.com/ddphuc01/k8s-cluster-setup/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/ddphuc01/k8s-cluster-setup/discussions)
+- **Email**: ddphuc01@gmail.com
 
 ## 🏷️ Phiên bản
 
