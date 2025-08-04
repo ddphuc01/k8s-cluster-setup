@@ -1,30 +1,27 @@
-# Kubernetes Cluster Setup with Complete Monitoring Stack
+# Kubernetes Cluster Setup với Complete Monitoring Stack
 
-## 🎯 **Project Overview**
+## 🎯 Tổng quan dự án
 
-Complete Kubernetes cluster setup with production-ready monitoring stack including Prometheus, Grafana, Loki, and AlertManager.
+Dự án này cung cấp giải pháp hoàn chỉnh để triển khai Kubernetes cluster với monitoring stack production-ready bao gồm Prometheus, Grafana, Loki, và AlertManager.
 
-## ✅ **Current Status**
+## ✨ Tính năng chính
 
-**Monitoring Stack**: ✅ **FULLY OPERATIONAL**
-- **Prometheus**: Metrics collection and storage
-- **Grafana**: Visualization and dashboards
-- **Loki**: Log aggregation with drilldown support
-- **Promtail**: Log collection from Kubernetes pods
-- **AlertManager**: Alerting and notifications
-- **MinIO**: Object storage for backups
+- **🚀 Tự động hóa hoàn toàn**: Cài đặt K8s cluster chỉ với một lệnh
+- **📊 Monitoring toàn diện**: Prometheus + Grafana + AlertManager
+- **📝 Log tập trung**: Loki + Promtail cho log aggregation
+- **🔒 Bảo mật**: SSL/TLS certificates tự động
+- **⚡ Load Balancing**: MetalLB cho bare-metal environments
+- **🎛️ Quản lý dễ dàng**: Rancher UI (tùy chọn)
 
----
-
-## 🏗️ **Architecture**
+## 🏗️ Kiến trúc hệ thống
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │                    Kubernetes Cluster                           │
 │                                                                 │
 │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐            │
-│  │   Worker    │  │   Worker    │  │   Master    │            │
-│  │   Node 1    │  │   Node 2    │  │   Node      │            │
+│  │   Master    │  │   Worker    │  │   Worker    │            │
+│  │   Node      │  │   Node 1    │  │   Node 2    │            │
 │  └─────────────┘  └─────────────┘  └─────────────┘            │
 │                                                                 │
 │  ┌─────────────────────────────────────────────────────────┐   │
@@ -41,312 +38,249 @@ Complete Kubernetes cluster setup with production-ready monitoring stack includi
 └─────────────────────────────────────────────────────────────────┘
 ```
 
----
+## 📋 Yêu cầu hệ thống
 
-## 🚀 **Quick Start**
+### Phần cứng tối thiểu
+- **Master Node**: 2 CPU, 4GB RAM, 50GB disk
+- **Worker Nodes**: 2 CPU, 4GB RAM, 50GB disk mỗi node
+- **Network**: Kết nối internet ổn định
 
-### **1. Access Monitoring Stack**
+### Hệ điều hành được hỗ trợ
+- Ubuntu 20.04/22.04 LTS
+- CentOS 7/8
+- Rocky Linux 8/9
+- Debian 10/11
 
-```bash
-# Add to /etc/hosts
-echo "192.168.56.102 grafana.local" | sudo tee -a /etc/hosts
-echo "192.168.56.102 prometheus.local" | sudo tee -a /etc/hosts
-echo "192.168.56.102 alertmanager.local" | sudo tee -a /etc/hosts
-echo "192.168.56.102 loki.local" | sudo tee -a /etc/hosts
-```
+### Phần mềm cần thiết
+- Python 3.6+
+- Ansible 2.9+
+- SSH access đến tất cả nodes
+- Sudo privileges
 
-### **2. Access URLs**
+## 🚀 Cài đặt nhanh
 
-- **Grafana**: http://grafana.local
-  - Username: `admin`
-  - Password: Check secret `prometheus-grafana`
-- **Prometheus**: http://prometheus.local
-- **AlertManager**: http://alertmanager.local
-- **Loki**: http://loki.local
-
-### **3. Check Status**
+### Bước 1: Chuẩn bị môi trường
 
 ```bash
-# All monitoring components
-kubectl get pods -n monitoring
+# Clone repository
+git clone https://github.com/your-username/k8s-cluster-setup.git
+cd k8s-cluster-setup
 
-# Services
-kubectl get svc -n monitoring
-
-# Ingress
-kubectl get ingress -n monitoring
+# Cấp quyền thực thi
+chmod +x install.sh
+chmod +x scripts/*.sh
 ```
 
----
+### Bước 2: Cấu hình inventory
 
-## 📁 **Project Structure**
+Chỉnh sửa file `inventory/hosts.yml`:
 
+```yaml
+all:
+  hosts:
+    master:
+      ansible_host: 192.168.1.10
+      ip: 192.168.1.10
+      access_ip: 192.168.1.10
+    worker1:
+      ansible_host: 192.168.1.11
+      ip: 192.168.1.11
+      access_ip: 192.168.1.11
+    worker2:
+      ansible_host: 192.168.1.12
+      ip: 192.168.1.12
+      access_ip: 192.168.1.12
+  children:
+    kube_control_plane:
+      hosts:
+        master:
+    kube_node:
+      hosts:
+        worker1:
+        worker2:
+    etcd:
+      hosts:
+        master:
+    k8s_cluster:
+      children:
+        kube_control_plane:
+        kube_node:
+    calico_rr:
+      hosts: {}
 ```
-k8s-cluster-setup/
-├── manifests/
-│   └── monitoring/
-│       ├── loki-deployment-manual.yaml          # Loki deployment
-│       ├── loki-config-with-volume.yaml         # Loki config (drilldown enabled)
-│       ├── promtail-config.yaml                 # Promtail config
-│       ├── promtail-deployment.yaml             # Promtail deployment
-│       ├── grafana-datasources-fixed.yaml       # Grafana datasources
-│       └── grafana-dashboards-config.yaml       # Auto-load dashboards
-├── scripts/                                      # Setup and maintenance scripts
-├── docs/                                         # Documentation
-├── LOKI_DEPLOYMENT_SUMMARY.md                   # Loki deployment guide
-├── LOKI_GRAFANA_STATUS.md                       # Integration status
-├── GRAFANA_DASHBOARDS_GUIDE.md                  # Dashboard guide
-├── MONITORING_STACK_COMPLETE_GUIDE.md           # Complete monitoring guide
-└── README.md                                     # This file
-```
 
----
+### Bước 3: Chạy cài đặt
 
-## 📊 **Monitoring Features**
-
-### **Metrics Monitoring**
-- ✅ Kubernetes cluster metrics
-- ✅ Node performance metrics
-- ✅ Pod and container metrics
-- ✅ Service and endpoint metrics
-- ✅ Custom application metrics
-
-### **Log Monitoring**
-- ✅ Centralized log collection
-- ✅ Real-time log streaming
-- ✅ Log search and filtering
-- ✅ Log analytics and visualization
-- ✅ Drilldown support ✅
-
-### **Alerting**
-- ✅ Prometheus-based alerts
-- ✅ Log-based alerts
-- ✅ AlertManager integration
-- ✅ Notification channels (configurable)
-
-### **Visualization**
-- ✅ Grafana dashboards
-- ✅ Custom dashboards
-- ✅ Real-time monitoring
-- ✅ Historical data analysis
-
----
-
-## 🎨 **Dashboard Recommendations**
-
-### **Core Dashboards (Import from Grafana.com)**
-1. **Kubernetes Cluster Monitoring** - ID: 315
-2. **Kubernetes Cluster (Prometheus)** - ID: 7249
-3. **Loki Dashboard** - ID: 12019
-4. **Node Exporter Full** - ID: 1860
-
-### **Custom Dashboards (Pre-configured)**
-1. **Kubernetes Logs Dashboard** - UID: `kubernetes-logs`
-2. **Loki Performance Dashboard** - UID: `loki-performance`
-
----
-
-## 🔧 **Configuration**
-
-### **Key Features Enabled**
-- **Loki Drilldown**: `volume_enabled: true`
-- **Log Retention**: 31 days
-- **Metrics Retention**: 15 days
-- **Auto-scaling**: Enabled
-- **Persistent Storage**: 10Gi for logs, 8Gi for metrics
-
-### **Resource Limits**
-- **Loki**: 256Mi RAM, 100m CPU (request)
-- **Prometheus**: ~512Mi RAM, 200m CPU
-- **Grafana**: ~128Mi RAM, 100m CPU
-
----
-
-## 🛠️ **Maintenance**
-
-### **Health Checks**
 ```bash
-# Quick health check
-kubectl get pods -n monitoring
+# Cài đặt cluster cơ bản
+./install.sh
 
-# Detailed status
-kubectl logs -n monitoring -l app=loki --tail=5
-kubectl logs -n monitoring -l app=grafana --tail=5
+# Hoặc cài đặt với monitoring stack
+./install.sh --with-monitoring
+
+# Hoặc cài đặt đầy đủ với Rancher
+./install.sh --full-stack
 ```
 
-### **Backup**
+## 📊 Truy cập Monitoring Stack
+
+Sau khi cài đặt thành công, bạn có thể truy cập:
+
+### Grafana Dashboard
 ```bash
-# Backup configurations
-kubectl get configmap -n monitoring -o yaml > monitoring-configs-backup.yaml
-kubectl get secret -n monitoring -o yaml > monitoring-secrets-backup.yaml
+# Lấy URL và credentials
+kubectl get ingress -n monitoring grafana-ingress
+kubectl get secret -n monitoring grafana-admin-secret -o jsonpath="{.data.admin-password}" | base64 -d
 ```
 
-### **Updates**
+- **URL**: `https://grafana.your-domain.com`
+- **Username**: `admin`
+- **Password**: Lấy từ lệnh trên
+
+### Prometheus
 ```bash
-# Update Helm repositories
-helm repo update
-
-# Check for updates
-helm list -n monitoring
+kubectl get ingress -n monitoring prometheus-ingress
 ```
+
+- **URL**: `https://prometheus.your-domain.com`
+
+### AlertManager
+```bash
+kubectl get ingress -n monitoring alertmanager-ingress
+```
+
+- **URL**: `https://alertmanager.your-domain.com`
+
+## 🔧 Cấu hình nâng cao
+
+### Tùy chỉnh Monitoring
+
+Chỉnh sửa các file trong `manifests/monitoring/`:
+
+- `prometheus-rules.yaml`: Cấu hình alert rules
+- `alertmanager-config.yaml`: Cấu hình notification channels
+- `grafana-dashboards-config.yaml`: Import custom dashboards
+
+### Cấu hình SSL/TLS
+
+```bash
+# Cài đặt cert-manager
+./scripts/install-cert-manager.sh
+
+# Cấu hình Let's Encrypt
+kubectl apply -f manifests/cert-manager/
+```
+
+### Backup và Restore
+
+```bash
+# Backup ETCD
+./scripts/backup-etcd.sh
+
+# Backup Persistent Volumes
+./scripts/backup-pvs.sh
+
+# Restore từ backup
+./scripts/restore-cluster.sh /path/to/backup
+```
+
+## 🛠️ Scripts hữu ích
+
+### Kiểm tra trạng thái
+```bash
+./scripts/check-monitoring-stack.sh    # Kiểm tra monitoring
+./scripts/rancher-status.sh           # Kiểm tra Rancher
+```
+
+### Bảo trì
+```bash
+./scripts/cleanup-cert-manager.sh     # Dọn dẹp certificates
+./scripts/fix-python-env.sh          # Sửa Python environment
+```
+
+### Cài đặt thành phần riêng lẻ
+```bash
+./scripts/install-metallb.sh         # Cài MetalLB
+./scripts/install-ingress.sh         # Cài NGINX Ingress
+./scripts/install-monitoring-stack.sh # Cài monitoring stack
+```
+
+## 📚 Tài liệu chi tiết
+
+- [Hướng dẫn cài đặt chi tiết](docs/installation.md)
+- [Cấu hình hệ thống](docs/configuration.md)
+- [Troubleshooting](docs/troubleshooting.md)
+- [Grafana Dashboards](GRAFANA_DASHBOARDS_GUIDE.md)
+- [Loki Deployment](LOKI_DEPLOYMENT_SUMMARY.md)
+
+## 🔍 Troubleshooting
+
+### Lỗi thường gặp
+
+#### 1. SSH Connection Failed
+```bash
+# Kiểm tra SSH connectivity
+ansible all -i inventory/hosts.yml -m ping
+
+# Cấu hình SSH keys
+./scripts/configure-sudo.sh
+```
+
+#### 2. Pod không start được
+```bash
+# Kiểm tra logs
+kubectl logs -n kube-system <pod-name>
+
+# Kiểm tra resources
+kubectl describe node
+kubectl top nodes
+```
+
+#### 3. Monitoring stack không hoạt động
+```bash
+# Kiểm tra trạng thái
+./scripts/check-monitoring-stack.sh
+
+# Restart monitoring pods
+kubectl rollout restart deployment -n monitoring
+```
+
+### Logs và Debug
+
+```bash
+# Xem logs cài đặt
+tail -f /var/log/kubespray.log
+
+# Debug Ansible
+export ANSIBLE_LOG_PATH=/tmp/ansible.log
+export ANSIBLE_DEBUG=1
+```
+
+## 🤝 Đóng góp
+
+1. Fork repository
+2. Tạo feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to branch (`git push origin feature/AmazingFeature`)
+5. Tạo Pull Request
+
+## 📄 License
+
+Dự án này được phân phối dưới MIT License. Xem `LICENSE` để biết thêm thông tin.
+
+## 🆘 Hỗ trợ
+
+- **Issues**: [GitHub Issues](https://github.com/your-username/k8s-cluster-setup/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/your-username/k8s-cluster-setup/discussions)
+- **Email**: your-email@domain.com
+
+## 🏷️ Phiên bản
+
+- **Current**: v2.0.0
+- **Kubernetes**: 1.28+
+- **Kubespray**: 2.23+
+- **Calico**: 3.26+
 
 ---
 
-## 🚨 **Troubleshooting**
-
-### **Common Issues**
-
-#### **1. Grafana không thấy Loki datasource**
-```bash
-# Check datasource config
-kubectl get configmap grafana-datasources -n monitoring --show-labels
-
-# Restart Grafana
-kubectl rollout restart deployment prometheus-grafana -n monitoring
-```
-
-#### **2. Loki không nhận logs**
-```bash
-# Check Promtail connection
-kubectl logs -n monitoring -l app=promtail | grep -i "error"
-
-# Test Loki API
-kubectl port-forward -n monitoring svc/loki 3100:3100
-curl http://localhost:3100/ready
-```
-
-#### **3. Drilldown không hoạt động**
-```bash
-# Check Loki config
-kubectl get configmap loki-config -n monitoring -o yaml | grep volume_enabled
-
-# Restart Loki
-kubectl rollout restart deployment loki -n monitoring
-```
-
-### **Performance Issues**
-```bash
-# Check resource usage
-kubectl top pods -n monitoring
-
-# Check storage
-kubectl get pvc -n monitoring
-```
-
----
-
-## 📈 **Performance Metrics**
-
-### **Expected Performance**
-- **Log ingestion**: ~10K logs/second
-- **Query performance**: < 1s for recent logs
-- **Dashboard load time**: < 2s
-- **Alert response time**: < 30s
-
-### **Storage Requirements**
-- **Logs**: 10Gi (31 days retention)
-- **Metrics**: 8Gi (15 days retention)
-- **Total**: ~18Gi minimum
-
----
-
-## 🔍 **Monitoring Commands**
-
-### **Check Status**
-```bash
-# All monitoring pods
-kubectl get pods -n monitoring
-
-# Services
-kubectl get svc -n monitoring
-
-# Ingress
-kubectl get ingress -n monitoring
-```
-
-### **Check Logs**
-```bash
-# Loki logs
-kubectl logs -n monitoring -l app=loki
-
-# Promtail logs
-kubectl logs -n monitoring -l app=promtail
-
-# Grafana logs
-kubectl logs -n monitoring -l app=grafana -c grafana
-```
-
-### **Port Forwarding**
-```bash
-# Grafana
-kubectl port-forward -n monitoring svc/prometheus-grafana 3000:80
-
-# Loki
-kubectl port-forward -n monitoring svc/loki 3100:3100
-
-# Prometheus
-kubectl port-forward -n monitoring svc/prometheus-kube-prometheus-prometheus 9090:9090
-```
-
----
-
-## 🎯 **Next Steps**
-
-### **Immediate Actions**
-1. **Import recommended dashboards** từ Grafana.com
-2. **Setup alerting rules** cho critical metrics
-3. **Configure notification channels** (Slack, email)
-4. **Setup log retention policies**
-
-### **Advanced Setup**
-1. **Create application-specific dashboards**
-2. **Setup log parsing** cho structured logs
-3. **Configure external monitoring** (databases, APIs)
-4. **Setup backup and disaster recovery**
-
-### **Production Considerations**
-1. **Enable authentication** cho Grafana
-2. **Setup RBAC** cho monitoring access
-3. **Configure persistent storage** (S3 for Loki)
-4. **Setup monitoring for external services**
-
----
-
-## 📞 **Support**
-
-### **Documentation**
-- **Complete Guide**: [MONITORING_STACK_COMPLETE_GUIDE.md](MONITORING_STACK_COMPLETE_GUIDE.md)
-- **Dashboard Guide**: [GRAFANA_DASHBOARDS_GUIDE.md](GRAFANA_DASHBOARDS_GUIDE.md)
-- **Loki Guide**: [LOKI_DEPLOYMENT_SUMMARY.md](LOKI_DEPLOYMENT_SUMMARY.md)
-
-### **Maintenance Schedule**
-- **Weekly**: Check disk usage and cleanup
-- **Monthly**: Review dashboards and alerts
-- **Quarterly**: Update monitoring stack versions
-
----
-
-## 🎉 **Success Criteria**
-
-### ✅ **Completed**
-- [x] Kubernetes cluster setup
-- [x] Prometheus stack deployment
-- [x] Loki stack deployment with drilldown
-- [x] Grafana integration
-- [x] Log collection working
-- [x] External access configured
-- [x] Basic dashboards created
-
-### 🎯 **Production Ready**
-- [x] High availability setup
-- [x] Persistent storage
-- [x] Resource limits configured
-- [x] Security best practices
-- [x] Monitoring and alerting
-
----
-
-**Status**: ✅ **PRODUCTION READY**  
-**Last Updated**: 31/07/2025  
-**Version**: 1.0  
-**Maintainer**: DevOps Team
+⭐ **Nếu dự án này hữu ích, hãy cho chúng tôi một star!** ⭐
